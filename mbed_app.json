@@ -1,0 +1,38 @@
+{
+    "config": {
+         "use-tls-socket": {
+            "value": false
+        },
+        "socket-bufsize": {
+            "help": "Max socket data heap usage",
+            "value": "1024"
+        },
+        "tx": {
+            "help": "TX pin for serial connection",
+            "value": "PA_9"
+        },
+        "rx": {
+            "help": "RX pin for serial connection",
+            "value": "PA_10"
+        }
+    },
+    "target_overrides": {
+        "*": {
+            "target.network-default-interface-type": "WIFI",
+            "nsapi.default-wifi-security": "WPA_WPA2",
+            "nsapi.default-wifi-ssid": "\"Redmi Note 9S\"",
+            "nsapi.default-wifi-password": "\"1234567890\"",
+            "platform.stdio-baud-rate": 115200,
+            "platform.default-serial-baud-rate": 115200,
+            "esp8266.tx": "PA_9",
+            "esp8266.rx": "PA_10",
+            "esp8266.socket-bufsize": "1024",
+            "esp8266.debug": false,
+            "esp8266.provide-default": true,
+            "platform.stdio-convert-newlines": true,
+            "platform.stdio-buffered-serial": true,
+            "platform.stdio-flush-at-exit": true,
+            "mbed-mqtt.max-packet-size": "1024"
+        }
+    }
+}
