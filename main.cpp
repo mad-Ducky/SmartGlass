@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include <mbed.h>
 #include <MQTTmbed.h>
 #include <MQTTClientMbedOs.h>
@@ -7,42 +8,81 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MQTT_BROKER        "192.168.65.88"
+#define MQTT_BROKER        "192.168.30.88"
 #define MQTT_USERNAME      "smartglass"
 #define MQTT_PASSWORD      "aiushnik6"
 #define MQTT_TOPIC_POWER   "Power"
 #define MQTT_TOPIC_MODE    "Mode"
+#define MQTT_TOPIC_SENSOR  "LightSensor/LightIntensity/x"
 #define MQTT_TOPIC_PUBL    "Publish"
 #define MQTT_ID            "2e7b1cf6cf724b81b6b2cdf1a0765479"
 #define MQTT_PORT          1883
 #define SIG_NEED_PUBLISH   0x01
 
-int arrivedcount = 0;
+bool Auto_mode = false;
+bool Toning = false;
+int Value;
+DigitalOut OutToning(PB_10);
 
 void messageArrived(MQTT::MessageData& md)
 {
     MQTT::Message &message = md.message;
-    printf("Payload %.*s\r\n", message.payloadlen, (char*)message.payload);
-    ++arrivedcount;
+    MQTTString  &topic = md.topicName; 
+
+    printf("Payload %.*s in topic %.*s\r\n", message.payloadlen, (char*)message.payload, topic.lenstring.len, topic.lenstring.data);
+
+    if (strncmp(topic.lenstring.data, MQTT_TOPIC_SENSOR, topic.lenstring.len) == 0) 
+    {
+        Value = atoi((char*)message.payload);
+    }
+
+    if (strncmp(topic.lenstring.data, MQTT_TOPIC_POWER, topic.lenstring.len) == 0) 
+    {
+        if (strncmp((char*)message.payload, "On", message.payloadlen) == 0) 
+        {
+            Toning = true;
+        }
+        if (strncmp((char*)message.payload, "Off", message.payloadlen) == 0) 
+        {
+            Toning = false;
+        }
+    }
+
+    if (strncmp(topic.lenstring.data, MQTT_TOPIC_MODE, topic.lenstring.len) == 0)
+    {
+        if (strncmp((char*)message.payload, "Auto", message.payloadlen) == 0)
+        {
+            Auto_mode = true;
+        } 
+        else 
+        {
+            Auto_mode = false;
+        }
+    }
+
+    if (Auto_mode == false)
+    {
+        OutToning = Toning;
+    }
+    else 
+    {
+        OutToning = (Value < 1000)?false:true;
+    }
 }
 
 int main(int argc, char *argv[]) 
 
 {
-    DigitalOut tinting(PA_1);
-    tinting = false;
-    int wrong_mode = false;
-
     printf("Starting work SmartGlass:\n");
 
     TCPSocket socket;
     NetworkInterface *net = NetworkInterface::get_default_instance();
     if (!net) 
         {
-            printf("Error! No network inteface found.\n");
+            printf("Error! Network not found.\n");
             return 0;
         }
-    printf("Connecting to the network...\r\n");
+    printf("Connecting to network...\r\n");
 
 /* connect will perform the action to connect to the network */
     nsapi_size_or_error_t rc = net->connect();
@@ -62,7 +102,7 @@ int main(int argc, char *argv[])
 
 /* now we have to find where to connect */
     SocketAddress address;
-    address.set_ip_address("192.168.65.88");
+    address.set_ip_address("192.168.30.88");
     address.set_port(1883);
 
 /* we are connected to the network but since we're using a connection oriented
@@ -91,32 +131,14 @@ int main(int argc, char *argv[])
         printf("rc from MQTT subscribe is %d\r\n", rc);
     if ((rc = client.subscribe(MQTT_TOPIC_MODE, MQTT::QOS2, messageArrived)) != 0)
         printf("rc from MQTT subscribe is %d\r\n", rc);
+    if ((rc = client.subscribe(MQTT_TOPIC_SENSOR, MQTT::QOS2, messageArrived)) != 0)
+        printf("rc from MQTT subscribe is %d\r\n", rc);
 
     while (1)
     {
         client.yield(100);
     }
 
-    if (strcmp(topic, MQTT_TOPIC_POWER) == 0) 
-    {
-    // Определяем поведение MCU при различных значениях сообщения (payload) этого топика
-        if (strncmp((char*)messageArrived, "on", message.payloadlen) == NULL) 
-        {
-            tinting = true;
-        }
-        if (strncmp((char*)messageArrived, "off", message.payloadlen) == NULL) 
-        {
-            tinting = false;
-        }
-    }
-
-/*    {
-        if (strcnmp(MQTT_TOPIC_POWER) == "on")
-            tinting = true;
-            if ((MQTT_TOPIC_POWER) == "off")
-                tinting = false;
-    }
-*/
     MQTT::Message message;
     char *topic = (MQTT_TOPIC_PUBL);
     char buf[100];
