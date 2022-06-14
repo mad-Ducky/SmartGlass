@@ -8,14 +8,14 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define MQTT_BROKER        "192.168.30.88"
-#define MQTT_USERNAME      "smartglass"
-#define MQTT_PASSWORD      "aiushnik6"
+#define MQTT_BROKER        "IP address"
+#define MQTT_USERNAME      "username"
+#define MQTT_PASSWORD      "password"
 #define MQTT_TOPIC_POWER   "Power"
 #define MQTT_TOPIC_MODE    "Mode"
 #define MQTT_TOPIC_SENSOR  "LightSensor/LightIntensity/x"
 #define MQTT_TOPIC_PUBL    "Publish"
-#define MQTT_ID            "2e7b1cf6cf724b81b6b2cdf1a0765479"
+#define MQTT_ID            "ID"
 #define MQTT_PORT          1883
 #define SIG_NEED_PUBLISH   0x01
 
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
 
 /* now we have to find where to connect */
     SocketAddress address;
-    address.set_ip_address("192.168.30.88");
+    address.set_ip_address("IP address");
     address.set_port(1883);
 
 /* we are connected to the network but since we're using a connection oriented
